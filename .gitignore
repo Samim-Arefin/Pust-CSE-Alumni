@@ -1,0 +1,8 @@
+Alumni.Domain/obj/
+Alumni.Services/obj/
+Alumni/obj/
+.vs/
+Alumni.Domain/bin/Debug/net8.0/Alumni.Domain.deps.json
+Alumni/bin/
+Alumni.Domain/bin/
+Alumni.Services/bin/

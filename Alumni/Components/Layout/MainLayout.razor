@@ -1,0 +1,18 @@
+﻿@inherits LayoutComponentBase
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<PageTitle>PUST CSE Alumni</PageTitle>
+
+ <AuthorizeView>
+    <NotAuthorized>
+        <UnAuthorizedLayout>
+            @Body
+        </UnAuthorizedLayout>
+    </NotAuthorized>
+    <Authorized>
+        <AuthorizedLayout>
+            @Body
+        </AuthorizedLayout>
+    </Authorized>
+</AuthorizeView>

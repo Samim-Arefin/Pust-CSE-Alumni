@@ -1,0 +1,123 @@
+﻿@page "/alumnies"
+@attribute [Authorize(Roles = "Admin")]
+@inject IUserService _userService
+
+<MudTable Class="mt-6" Loading="_loadingUser" Items="Users" Dense="true" Hover="true" T="UserDto" Filter="new Func<UserDto, bool>(UserFilterFunc)">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Alumnies</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_userSearchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <ColGroup>
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col style="width: 80px;" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<UserDto, object>(x => x.UserName)">User Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<UserDto, object>(x => x.Email)">Email</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<UserDto, object>(x => x.Batch)">Batch</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<UserDto, object>(x => x.Session)">Session</MudTableSortLabel></MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Action</MudTh>
+    </HeaderContent>
+    <NoRecordsContent>
+        <MudText Typo="Typo.h5" Class="mud-text-secondary mt-16 mb-16">No Alumnies to show</MudText>
+    </NoRecordsContent>
+    <RowTemplate>
+        <MudTd>@context.UserName</MudTd>
+        <MudTd>@context.Email</MudTd>
+        <MudTd>@context.Batch.ToString()</MudTd>
+        <MudTd>@context.Session</MudTd>
+        <MudTd>
+            @if(context.Status is StatusEnum.Approved)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Title="Approved" Color="Color.Primary" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Title="Pending" Color="Color.Error" />
+            }
+        </MudTd>
+        <MudTd>
+            <MudItem Class="d-flex gap-2">
+                <MudTooltip Text="@(context.Status is StatusEnum.Approved ? "Disable" : "Enable")">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Approval" OnClick="() => ChangeAlumniStatus(context)" />
+                </MudTooltip>
+            </MudItem>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager RowsPerPageString="Rows Per Page" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<UserDto> Users { get; set; } = new();
+
+    private string _userSearchString = string.Empty;
+    private bool _loadingUser = true;
+
+    private DialogOptions _dialogOption = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true, DisableBackdropClick = true, CloseButton = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Users = await _userService.AllUser();
+        }
+        catch(Exception ex)
+        {
+            Users = new();
+            _snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loadingUser = false;
+        }
+    }
+
+    private bool UserFilterFunc(UserDto user)
+    {
+        if (string.IsNullOrWhiteSpace(_userSearchString))
+            return true;
+        if (user.UserName.Contains(_userSearchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (user.Email.Contains(_userSearchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (user.Session.Contains(_userSearchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (user.Batch.ToString().Contains(_userSearchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task ChangeAlumniStatus(UserDto user)
+    {
+        var dialogParameter = new DialogParameters
+            {
+                ["ContentText"] = "Are you sure you want to change status!"
+            };
+        var dialog = _dialogService.Show<ConfirmationDialog>("Change " + $"alumni {user.UserName} status", dialogParameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            var status = user.Status is StatusEnum.Approved ? StatusEnum.Pending : StatusEnum.Approved;
+            var response = await _userService.ChangeUserStatus(user.Id, status);
+            if (response.IsSuccess)
+            {
+                var index = Users.IndexOf(user);
+                user.Status = status;
+                Users[index] = user;
+                _snackbar.Add(response.Message, Severity.Success);
+            }
+            else
+            {
+                _snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+    }
+}

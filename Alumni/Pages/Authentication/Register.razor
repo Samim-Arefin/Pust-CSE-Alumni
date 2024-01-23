@@ -1,0 +1,115 @@
+﻿@page "/register"
+@attribute [AllowAnonymous]
+@inject IAuthenticationService _authService
+
+<div class="" style="display:flex;height: 100vh; overflow: hidden; background: url('/images/backgrounds/login_background_temp.jpg'); background-size: cover;">
+    <div class="" style="width:100%;">
+        <div class="container" style="height:100%">
+            <div class="row align-items-center" style="height:100%">
+                <div class="col-12 py-3">
+                    <div class="" style="padding: 0; overflow: hidden; border-radius: 8px !important;">
+                        <div class="container-fluid" style="padding:0px; !important">
+                            <div class="row">
+                                <div class="col-12 col-md-6 p-5 position-relative align-items-center flex-column" style="display: flex; background-color: #147ebb">
+                                    <img src="/images/pust_logo.png" style="object-fit: contain; width: 180px;" />
+                                    <h2 style="color:white;font-size:38px;" class=" mt-3 mt-md-3 pt-0 pt-md-4 mb-4 d-none d-sm-block">Welcome!</h2>
+                                </div>
+                                <div class="col-12 col-md-6 p-5" style="background-color:ghostwhite">
+                                    <h5 class="mb-4">Register</h5>
+                                    <section>
+                                        <EditForm Model="@_register" OnValidSubmit="Submit">
+                                            <DataAnnotationsValidator />
+                                            <MudTextField Class="pb-4" @bind-Value="_register.Email" Immediate="true" Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" For="() => _register.Email" />
+                                            <MudTextField Class="pb-4" @bind-Value="_register.Roll" Immediate="true" Label="Roll" Variant="Variant.Outlined" Margin="Margin.Dense" For="() =>_register.Roll" />
+                                            <MudTextField Class="pb-4" @bind-Value="_register.Password" HelperText="Password should contain digit & alphanumeric characters" Immediate="true" Label="Password" Margin="Margin.Dense" Variant="Variant.Outlined" InputType="@Password" Adornment="Adornment.End" AdornmentIcon="@PasswordIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" For="() => _register.Password" />
+                                            <MudTextField Class="pb-4" @bind-Value="_register.ConfirmPassword" Immediate="true" Label="Confirm Password" Margin="Margin.Dense" Variant="Variant.Outlined" InputType="@ConfirmPassword" Adornment="Adornment.End" AdornmentIcon="@ConfirmPasswordIcon" OnAdornmentClick="ShowConfirmPassword" AdornmentAriaLabel="Show Confirm Password" For="() => _register.ConfirmPassword" />
+                                             @if (_errorMessage.Any())
+                                             {
+                                                @foreach(var message in _errorMessage)
+                                                {
+                                                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-2">@message</MudAlert>
+                                                }
+                                             }
+                                            <MudButton Color="Color.Primary" FullWidth="true" Variant="Variant.Filled" ButtonType="ButtonType.Submit"><MudText Typo="Typo.body2">Register</MudText></MudButton>
+                                        </EditForm>
+                                        <MudStack Class="pt-2" Row="false" Justify="Justify.Center" AlignItems="AlignItems.Start">
+                                            <MudLink Underline="Underline.None" Href="/login">Existing user!</MudLink>
+                                            <MudLink Underline="Underline.None" Href="/resend/confirmationEmail">Resend confirmation email!</MudLink>
+                                        </MudStack>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="text-align:center;width: 100%; margin-top: 20px; color: #1f1c2b" class="">PustCSE v.0.1.0, Copyright Ⓒ 2023</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest _register { get; set; } = new();
+    private bool isShowPassword { get; set; } = false;
+    private InputType Password = InputType.Password;
+    private string PasswordIcon = Icons.Material.Filled.VisibilityOff;
+
+    private bool isShowConfirmPassword { get; set; } = false;
+    private InputType ConfirmPassword = InputType.Password;
+    private string ConfirmPasswordIcon = Icons.Material.Filled.VisibilityOff;
+
+    private List<string> _errorMessage { get; set; } = new();
+
+    private void ShowPassword()
+    {
+        @if (isShowPassword)
+        {
+            isShowPassword = false;
+            PasswordIcon = Icons.Material.Filled.VisibilityOff;
+            Password = InputType.Password;
+        }
+        else
+        {
+            isShowPassword = true;
+            PasswordIcon = Icons.Material.Filled.Visibility;
+            Password = InputType.Text;
+        }
+    }
+
+    private void ShowConfirmPassword()
+    {
+        @if (isShowConfirmPassword)
+        {
+            isShowConfirmPassword = false;
+            ConfirmPasswordIcon = Icons.Material.Filled.VisibilityOff;
+            ConfirmPassword = InputType.Password;
+        }
+        else
+        {
+            isShowConfirmPassword = true;
+            ConfirmPasswordIcon = Icons.Material.Filled.Visibility;
+            ConfirmPassword = InputType.Text;
+        }
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            var response = await _authService.Register(_register);
+            if (response.IsSuccess)
+            {
+                _errorMessage.Clear();
+                _snackbar.Add(response.Message, Severity.Success);
+            }
+            else
+            {
+                _errorMessage = response.Message?.Split("/n").ToList();
+            }
+        }
+        catch(Exception ex)
+        {
+            _snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

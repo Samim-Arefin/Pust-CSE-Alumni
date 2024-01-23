@@ -1,0 +1,18 @@
+﻿@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var userId = await _sessionStorage.GetItemAsync<string>(key: "AuthKey");
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await ((AuthStateProvider)_authStateProvider).SetStateAsync(userId);
+                _navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                _navigationManager.NavigateTo("login");
+            }
+        }
+    }
+}

@@ -1,0 +1,116 @@
+﻿@page "/login"
+@attribute [AllowAnonymous]
+@inject IAuthenticationService _authService
+@inject IUserService _userService
+
+<div class="" style="display:flex;height: 100vh; overflow: hidden; background: url('/images/backgrounds/login_background_temp.jpg'); background-size: cover;">
+    <div class="" style="width:100%;">
+        <div class="container" style="height:100%">
+            <div class="row align-items-center" style="height:100%">
+                <div class="col-12 py-3">
+                    <div class="" style="padding: 0; overflow: hidden; border-radius: 8px !important;">
+                        <div class="container-fluid" style="padding:0px; !important">
+                            <div class="row">
+                                <div class="col-12 col-md-6 p-5 position-relative align-items-center flex-column" style="display: flex; background-color: #147ebb">
+                                    <img src="/images/pust_logo.png" style="object-fit: contain; width: 180px;" />
+                                    <h2 style="color:white;font-size:38px;" class=" mt-3 mt-md-3 pt-0 pt-md-4 mb-4 d-none d-sm-block">Welcome!</h2>
+                                    <p style="color:white;" class="mb-4 pb-0 pb-md-4 d-none d-sm-block">Please log in in order to proceed.</p>
+                                </div>
+                                <div class="col-12 col-md-6 p-5" style="background-color:ghostwhite">
+                                    <h5 class="mb-4">Login</h5>
+                                    <section>
+                                        <EditForm Model="@_login" OnValidSubmit="Submit">
+                                            <DataAnnotationsValidator />
+                                            <MudTextField Class="pb-4" @bind-Value="_login.Email" Immediate="true" Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" For="() => _login.Email" />
+                                            <MudTextField Class="pb-4" @bind-Value="_login.Password" Immediate="true" Label="Password" Margin="Margin.Dense" Variant="Variant.Outlined" InputType="@Password" Adornment="Adornment.End" AdornmentIcon="@PasswordIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" For="() => _login.Password" />
+                                            @if (_errorMessage.Any())
+                                            {
+                                                @foreach (var message in _errorMessage)
+                                                {
+                                                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-2">@message</MudAlert>
+                                                }
+                                            }
+                                            <MudButton Color="Color.Primary" FullWidth="true" Variant="Variant.Filled" ButtonType="ButtonType.Submit"><MudText Typo="Typo.body2">Login</MudText></MudButton>
+                                        </EditForm>
+                                        <MudStack Class="pt-2" Row="false" Justify="Justify.Center" AlignItems="AlignItems.Start">
+                                            <MudLink Underline="Underline.None" Href="/register">New to PUST Alumni?</MudLink>
+                                            <MudLink Underline="Underline.None" Href="/forgot/password">Forgot password?</MudLink>
+                                        </MudStack>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="text-align:center;width: 100%; margin-top: 20px; color: #1f1c2b" class="">PustCSE v.0.1.0, Copyright Ⓒ 2023</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    protected Task<AuthenticationState> AuthState { get; set; }
+
+    private LoginRequest _login { get; set; } = new();
+    private bool isShowPassword { get; set; } = false;
+    private InputType Password = InputType.Password;
+    private string PasswordIcon = Icons.Material.Filled.VisibilityOff;
+
+    private List<string> _errorMessage { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = (await AuthState).User;
+            if (user is not null && user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                _navigationManager.NavigateTo("/");
+            }
+        }
+        catch
+        {
+            
+        }
+    }
+
+    private void ShowPassword()
+    {
+        @if (isShowPassword)
+        {
+            isShowPassword = false;
+            PasswordIcon = Icons.Material.Filled.VisibilityOff;
+            Password = InputType.Password;
+        }
+        else
+        {
+            isShowPassword = true;
+            PasswordIcon = Icons.Material.Filled.Visibility;
+            Password = InputType.Text;
+        }
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            var response = await _authService.Login(_login);
+            if (response.IsSuccess)
+            {
+                await ((AuthStateProvider)_authStateProvider).SetStateAsync(response.UserId);
+                _errorMessage.Clear();
+                _snackbar.Add(response.Message, Severity.Success);
+            }
+            else
+            {
+                _errorMessage = response.Message?.Split("/n").ToList();
+            }
+        }
+        catch(Exception ex)
+        {
+            _snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}
+

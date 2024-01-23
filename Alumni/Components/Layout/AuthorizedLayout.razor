@@ -1,0 +1,52 @@
+﻿<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.body1" Class="ml-4">CSE Alumni</MudText>
+        <MudSpacer />
+        <MudIconButton Style="color:white" Icon="@Icons.Material.Filled.Logout" OnClick="Logout" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4">
+            @ChildContent
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    private bool _drawerOpen { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var state = await _authStateProvider.GetAuthenticationStateAsync();
+            var user = state.User;
+
+            var userId = user.GetUserId();
+            var userName = user.GetUserName();
+
+            _currentUser.SetState(userId, userName);
+        }
+        catch
+        {
+            
+        }
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private async Task Logout()
+    {
+        await ((AuthStateProvider)_authStateProvider).ClearStateAsync();
+        _navigationManager.NavigateTo("login");
+    }
+}

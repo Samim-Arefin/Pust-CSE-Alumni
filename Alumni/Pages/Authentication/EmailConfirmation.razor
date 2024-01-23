@@ -1,0 +1,36 @@
+﻿@page "/verification/{id}"
+@attribute [AllowAnonymous]
+@inject IAuthenticationService _authService
+
+@code {
+    [Parameter]
+    public string id { get; set; } = string.Empty;
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string token { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                var response = await _authService.ConfirmEmail(id, token);
+                if (response.IsSuccess)
+                {
+                    _snackbar.Add(response.Message, Severity.Success);
+                    _navigationManager.NavigateTo("/login");
+                }
+                else
+                {
+                    _snackbar.Add(response.Message, Severity.Error);
+                    _navigationManager.NavigateTo("/register");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

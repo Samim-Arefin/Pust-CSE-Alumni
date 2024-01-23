@@ -1,0 +1,26 @@
+﻿<MudNavMenu Rounded="true" Margin="Margin.Dense" Class="pa-2">
+    <AuthorizeView>
+        <MudNavLink IconColor="Color.Tertiary" Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        @* <MudNavLink IconColor="Color.Tertiary" Href="/update/profile" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Edit">Edit Profile</MudNavLink> *@
+        @* <MudNavLink IconColor="Color.Tertiary" Href="/profile" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.RemoveRedEye">View Profile</MudNavLink> *@
+        @* <MudNavLink IconColor="Color.Tertiary" Href="/search" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Search">Find Alumni</MudNavLink> *@
+    </AuthorizeView>
+    <AuthorizeView Roles="@(UserRoleType.Admin.ToString())">
+        <MudNavGroup IconColor="Color.Error" Title="Admin Panel" Icon="@Icons.Material.Filled.AdminPanelSettings" Expanded="true">
+            <MudNavLink Href="/alumnies" Icon="@Icons.Material.Filled.Person2" IconColor="Color.Info">Alumnies</MudNavLink>
+        </MudNavGroup>
+    </AuthorizeView>
+</MudNavMenu>
+
+<style>
+    .mud-nav-link {
+        text-decoration: none;
+        color: white;
+    }
+</style>
+
+@code {
+    private bool collapseNavMenu { get; set; } = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : string.Empty;
+}
