@@ -17,7 +17,7 @@
                                 <div class="col-12 col-md-6 p-5" style="background-color:ghostwhite">
                                     <h5 class="mb-4">Register</h5>
                                     <section>
-                                        <EditForm Model="@_register" OnValidSubmit="Submit">
+                                        <EditForm Model="@_register" OnValidSubmit="Submit" Enhance>
                                             <DataAnnotationsValidator />
                                             <MudTextField Class="pb-4" @bind-Value="_register.Email" Immediate="true" Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" For="() => _register.Email" />
                                             <MudTextField Class="pb-4" @bind-Value="_register.Roll" Immediate="true" Label="Roll" Variant="Variant.Outlined" Margin="Margin.Dense" For="() =>_register.Roll" />

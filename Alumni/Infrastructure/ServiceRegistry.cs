@@ -33,6 +33,9 @@ namespace Alumni.Infrastructure
                         options.Password.RequiredLength = 6;
                         options.Password.RequireNonAlphanumeric = true;
                         options.User.RequireUniqueEmail = true;
+                        options.Lockout.AllowedForNewUsers = true;
+                        options.Lockout.MaxFailedAccessAttempts = 3;
+                        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
                         options.Tokens.PasswordResetTokenProvider = "resetPassword";
                     })
                     .AddDefaultTokenProviders()
