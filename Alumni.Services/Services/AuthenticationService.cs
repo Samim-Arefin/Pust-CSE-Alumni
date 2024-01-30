@@ -22,14 +22,16 @@ namespace Alumni.Services.Services
     public class AuthenticationService : IAuthenticationService
     {
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly RoleManager<Role> _roleManager;
         private readonly IEmailService _emailService;
         private readonly IDataProtectionService _dataProtection;
         private readonly ILogger<AuthenticationService> _logger;
-        public AuthenticationService(UserManager<User> userManager, RoleManager<Role> roleManager, IEmailService emailService,
+        public AuthenticationService(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<Role> roleManager, IEmailService emailService,
             IDataProtectionService dataProtection, ILogger<AuthenticationService> logger)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _roleManager = roleManager;
             _emailService = emailService;
             _dataProtection = dataProtection;
@@ -54,8 +56,8 @@ namespace Alumni.Services.Services
                 if (hasUser is not null)
                 {
                     var isEmailConfirmed = await _userManager.IsEmailConfirmedAsync(hasUser);
-                    return isEmailConfirmed ? new() {IsSuccess = false, Message = "Existing user! please verify your email!" } 
-                                            : new() {IsSuccess = false, Message = "User already exits! Please Log in" };           
+                    return isEmailConfirmed ? new() { IsSuccess = false, Message = "User already exits! Please Log in" }
+                                            : new() { IsSuccess = false, Message = "Existing user! please verify your email!" };           
                 }
 
                 var firstTwoDigitOfRoll = registerRequest.Roll.Substring(0, 2);
@@ -129,8 +131,7 @@ namespace Alumni.Services.Services
                     };
                 }
 
-                var isEmailConfirmed = await _userManager.IsEmailConfirmedAsync(hasUser);
-                if (!isEmailConfirmed)
+                if (!hasUser.EmailConfirmed)
                 {
                     return new()
                     {
@@ -139,13 +140,23 @@ namespace Alumni.Services.Services
                     };
                 }
 
-                var isPasswordCorrect = await _userManager.CheckPasswordAsync(hasUser, loginRequest.Password);
-                if (!isPasswordCorrect)
+                var login = await _signInManager.CheckPasswordSignInAsync(hasUser, loginRequest.Password, true);
+
+                if (!login.Succeeded)
                 {
+                    if (!login.IsLockedOut)
+                    {
+                        return new()
+                        {
+                            IsSuccess = false,
+                            Message = "Password is incorrect!"
+                        };
+                    }
+
                     return new()
                     {
                         IsSuccess = false,
-                        Message = "Password is incorrect!"
+                        Message = "Your account is locked out. Kindly wait for 10 minutes and try again!"
                     };
                 }
 
@@ -363,6 +374,11 @@ namespace Alumni.Services.Services
                         IsSuccess = false,
                         Message = string.Join("/n", errorList.Select(e => e.Description))
                     };
+                }
+
+                if(await _userManager.IsLockedOutAsync(hasUser))
+                {
+                    await _userManager.SetLockoutEndDateAsync(hasUser, DateTimeOffset.UtcNow);
                 }
 
                 return new()

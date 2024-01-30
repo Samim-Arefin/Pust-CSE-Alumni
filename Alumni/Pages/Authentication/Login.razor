@@ -19,7 +19,7 @@
                                 <div class="col-12 col-md-6 p-5" style="background-color:ghostwhite">
                                     <h5 class="mb-4">Login</h5>
                                     <section>
-                                        <EditForm Model="@_login" OnValidSubmit="Submit">
+                                        <EditForm Model="@_login" OnValidSubmit="Submit" Enhance>
                                             <DataAnnotationsValidator />
                                             <MudTextField Class="pb-4" @bind-Value="_login.Email" Immediate="true" Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" For="() => _login.Email" />
                                             <MudTextField Class="pb-4" @bind-Value="_login.Password" Immediate="true" Label="Password" Margin="Margin.Dense" Variant="Variant.Outlined" InputType="@Password" Adornment="Adornment.End" AdornmentIcon="@PasswordIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" For="() => _login.Password" />
